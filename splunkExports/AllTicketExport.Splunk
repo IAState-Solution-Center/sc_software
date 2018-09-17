@@ -1,0 +1,7 @@
+| dbxquery maxrows=50000000 shortnames=t connection="ChangeGear-db2" query="
+SELECT CG_IncidentRequest.ItemID as ItemID, CG_IncidentRequest.DepartmentNamePIT as CustomerDepartment, CG_IncidentRequest.Status as Status, CG_IncidentRequest.CreatedDateTime as CreatedTime, CG_IncidentRequest.CompletedDate as CloseTime, CG_IncidentRequestType.FullPath as Category, CG_IncidentRequest.UDF_ISUUserType as UserType, CG_Team.Description as CurrentTeam
+
+FROM CG_IncidentRequest Join CG_Department ON CG_IncidentRequest.Department = CG_Department.OID Join CG_IncidentRequestType on CG_IncidentRequest.IncidentRequestType = CG_IncidentRequestType.OID  Join CG_Team on CG_IncidentRequest.OwningTeam = CG_Team.OID
+
+WHERE CG_Team.Description = 'ISU Solution Center'
+"
