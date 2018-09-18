@@ -1,2 +1,3 @@
-# printer_scraper
-Scraper software for ISU Sol Ctr
+# SC Software
+Software for use in the ISU Solution Center.
+
