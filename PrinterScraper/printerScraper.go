@@ -6,6 +6,10 @@ import (
 	"time"
 	"html/template"
 	"io/ioutil"
+	
+	"fmt"
+	"github.com/anaskhan96/soup"
+	"os"
 )
 
 const Version = 0.1
@@ -42,7 +46,7 @@ func mainHandler(w http.ResponseWriter, req *http.Request) {
 /* Scrapes printers for necessary maitenance/service details */
 func main() {
 	log.Printf("PrinterScraper v%v", Version)
-
+	scrape()
 	// Set up web handlers
 	http.HandleFunc("/", mainHandler)
 
@@ -57,3 +61,15 @@ func main() {
 	}
 }
 
+func scrape(){
+	fmt.Println("Scraping...")
+	resp, err := soup.Get("http://10.10.11.5")
+	if err != nil {
+		os.Exit(1)
+	}
+	doc := soup.HTMLParse(resp)
+	links := doc.Find("div", "id", "status_table").FindAll("a")
+	for _, link := range links {
+		fmt.Println(link.Text(), "| Link :", link.Attrs()["href"])
+	}
+}
