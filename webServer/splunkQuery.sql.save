@@ -1,0 +1,2 @@
+SELECT CG_IncidentRequest.OID as uniqueID, ItemID, (Firstname + ' ' + Lastname) AS AssignedToPerson
+

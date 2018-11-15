@@ -8,8 +8,7 @@ include('functions.php');
 				<h2>Instructions:</h2>
 				<p>TBD</p>
 				<br>
-				<p>Test</p>
-				<button onclick='remove(-1)' class=pure-button>Remove</button>
+				<button onclick='remove(-1)' class="pure-button button-error">Remove All Tickets</button>
 				</div>
 			<div class="pure-u-1-3">
 				<form method=post action=functions.php class="pure-form pure-form-aligned">

@@ -15,7 +15,7 @@ include('functions.php');
 						<th>Status</th>
 						<th>Assigned</th>
 						<th>Edit</th>
-						<th>Open Ticket</th>
+						<th>Open Ticket<br>(New Tab)</th>
 					</tr>
 				</thead>
 

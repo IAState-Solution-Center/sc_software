@@ -18,6 +18,7 @@ if(isset($_POST['ticketRemove'])){
 
 if(isset($_POST['ticketWorking'])){
 	workingAssignment($_POST['ticketWorking']);
+	header('Location: /');
 }
 
 if(isset($_POST['csvData'])){
@@ -25,7 +26,7 @@ if(isset($_POST['csvData'])){
 	randomizeAssignments($csv);
 }
 function removeAssignment($ticketNumber){
-	if($ticketNumber == -1) $sql = "DELETE FROM tickets;";
+	if($ticketNumber == -1) $sql = "DELETE FROM tickets WHERE working = 0;";
 	else $sql = "DELETE FROM tickets WHERE ticketNumber=".$ticketNumber.";";
 	$db = new PDO('sqlite:db/tks.db');
 	$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -41,11 +42,24 @@ function removeAssignment($ticketNumber){
 }
 
 function workingAssignment($ticketNumber){
-	
+	$sql = "UPDATE tickets set working = (case working when 1 then 0 else 1 end) where ticketNumber = ".$ticketNumber.";";
+	$db = new PDO('sqlite:db/tks.db');
+	$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+// 	if ($db != null) echo "<p>db connected</p>"; 
+// 	else echo "<p>db did not connect</p>";
+	try	{
+		 $result0=$db->query($sql);
+		 print "<p>query ran</p>";
+	}
+	catch(PDOException $e){
+		 echo "Statement failed: " . $e->getMessage() . "<br>";
+		 return false;
+	}
 }
 
 function createAssignment($uniqueID, $employee, $ticketNumber, $status, $assigned){
-	$sql = "INSERT INTO tickets (uniqueID, employee, status, assignedDate, ticketNumber) VALUES (".$uniqueID.", '".$employee."', '".$status."', ".$assigned.", ".$ticketNumber.");";
+	$working = 0; //Initialize working as 0. Will be changed with button
+	$sql = "INSERT INTO tickets (uniqueID, employee, status, assignedDate, ticketNumber, working) VALUES (".$uniqueID.", '".$employee."', '".$status."', ".$assigned.", ".$ticketNumber.", ".$working.");";
 	$db = new PDO('sqlite:db/tks.db');
 	$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 // 	if ($db != null) echo "<p>db connected</p>"; 
@@ -61,19 +75,40 @@ function createAssignment($uniqueID, $employee, $ticketNumber, $status, $assigne
 }
 
 function readTickets(){
+	$sql = "SELECT * FROM tickets";
 	$db = new PDO('sqlite:db/tks.db');
-	$result = $db->query('SELECT * FROM tickets');
+	$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+// 	if ($db != null) echo "<p>db connected</p>"; 
+// 	else echo "<p>db did not connect</p>";
+	try	{
+		 $result=$db->query($sql);
+// 		 print "<p>query ran</p>";
+	}
+	catch(PDOException $e){
+		 echo "Statement failed: " . $e->getMessage() . "<br>";
+		 return false;
+	}
 	
 	foreach($result as $row)
     {
-		$link = "https://cytech.its.iastate.edu/CGWeb/MainUI/ServiceDesk/SDItemEditPanel.aspx?boundtable=IIncidentRequest&CloseOnPerformAction=false&ID=".$row['uniqueID']."&IsStandAlone=true";	
-		print "<tr><td>".$row['employee']."</td>";
+    	if($row['working']){
+    		$style = "class=pure-table-odd";
+    		$button = "pure-button-active";
+    	}
+    	else{
+    		$style = "";
+    		$button = "";
+    	} 
+    	$link = "https://cytech.its.iastate.edu/CGWeb/MainUI/ServiceDesk/SDItemEditPanel.aspx?boundtable=IIncidentRequest&CloseOnPerformAction=false&ID=".$row['uniqueID']."&IsStandAlone=true";	
+		print "<tr ".$style."><td>".$row['employee']."</td>";
 		print "<td>IR-0".$row['ticketNumber']."</td>";
 		print "<td>".$row['status']."</td>";
 		print "<td>".date('m-d-y g:i A', $row['assignedDate'])."</td>";
-		print "<td><button onclick='working(".$row['ticketNumber'].")' class=pure-button>Working</button>&nbsp;<button onclick='remove(".$row['ticketNumber'].")' class=pure-button>Remove</button></td>";
+		print "<td><button onclick='working(".$row['ticketNumber'].")' class='pure-button ".$button."'>Working</button>&nbsp;<button onclick='remove(".$row['ticketNumber'].")' class=pure-button>Remove</button></td>";
 		print "<td><a target='_blank' href=".$link." class=pure-button>Open</a>";
-    }
+// 		print "<td>".$row['working']."</td>";
+		echo "</tr>";
+		}
 }
 
 function printHeader(){
@@ -85,7 +120,12 @@ echo "<!doctype html>
     <script language='JavaScript' type='text/javascript' src='js/jquery.js'></script>
     <link rel='stylesheet' href='https://unpkg.com/purecss@1.0.0/build/pure-min.css' integrity='sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w' crossorigin='anonymous'>
     <link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.4.2/css/all.css' integrity='sha384-/rXc/GQVaYpyDdyxK+ecHPVYJSN9bmVFBvjA/9eOB+pb3F2w2N6fc5qB9Ew5yIns' crossorigin='anonymous'>
-  	<link rel='icon' type='image/png' href='/img/favicon-96x96.png'>
+  	<link rel='icon' type='image/png' href='/favicon.png'>
+    <link rel='stylesheet' href='css/index.css'>
+    <meta charset='UTF-8'>
+	<meta name='google' content='notranslate'>
+	<meta http-equiv='Content-Language' content='en'>
+	<meta http-equiv='refresh' content='30'>
   </head>
   <body>
 	<div class='pure-g'>
@@ -193,14 +233,13 @@ function randomizeAssignments($tickets){
 }
 
 function sendAssignments($list){
+	removeAssignment(-1); // BAD
 	foreach($list as &$asgn){
 		$uniqueID = $asgn[1][0];
 		$employee = $asgn[0];
 		$ticketNumber = substr($asgn[1][1], -6); //substr removes IR-0, because database wont store that.
 		$status = $asgn[1][2];
 		$assigned = time();
-		$sql = "INSERT INTO tickets (uniqueID, employee, status, assignedDate, ticketNumber) VALUES (".$uniqueID.", '".$employee."', '".$status."', ".$assigned.", ".$ticketNumber."); ";
-		echo $sql;
 		createAssignment($uniqueID, $employee, $ticketNumber, $status, $assigned);
 		echo "<script>location.replace('/');</script>";
 	}
