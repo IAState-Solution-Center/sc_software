@@ -1,22 +1,24 @@
 <?php
 include('functions.php');
+
 ?>
 
 <?= printHeader() ?>
 			<div class='pure-g'>
 				<div class="pure-u-1-3"></div>
 				<div class="pure-u-1-3">
-					<form class="pure-form pure-form-aligned">
+					<h2 align=center> Solution Center Tickets </h2>
+					<form method=POST action=functions.php class="pure-form pure-form-aligned">
 						<fieldset>
 							<div class="pure-control-group">
 								<label for="name">Login</label>
-								<input id="name" type="text" placeholder="sc_username">
-<!-- 								<span class="pure-form-message-inline">This is a required field.</span> -->
+								<input name=username id="name" type="text" placeholder="Phone Login">
+								<span class="pure-form-message-inline">e.g. sc48t5</span>
 							</div>
 
 							<div class="pure-control-group">
 								<label for="password">Password</label>
-								<input id="password" type="password" placeholder="Password">
+								<input name=password id="password" type="password" placeholder="Password">
 							</div>
 
 							<div class="pure-controls">
@@ -24,6 +26,7 @@ include('functions.php');
 							</div>
 						</fieldset>
 					</form>
+					<h3><? echo $_SESSION['loginMessage']; ?></h3>
 				</div>
 			<div class="pure-u-1-3"></div>
 		</div>
