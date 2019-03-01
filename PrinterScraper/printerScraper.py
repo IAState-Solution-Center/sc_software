@@ -87,7 +87,7 @@ while(1):
         if int(rollerkit[0]) == 0:
             status = 3
             #print("Printer " + printer_names[itr-1] + " needs roller kit: " + rollerkit[0] + "%")
-            print("Tier 3 or 4 replace\x1b[1;31m roller kit in\x1b[0;30m " + printer_names[itr-1] + ".")
+            print("Tier 3 or 4 replace\x1b[1;31m roller kit in\x1b[0;30m " + printer_names[itr-1] + "with name tag.")
         if int(imagingunit[0]) == 0:
             status = 4
             #print("Printer " + printer_names[itr-1] + " needs imagining unit: " + imagingunit[0] + "%")

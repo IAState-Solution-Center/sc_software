@@ -1,9 +1,0 @@
-| dbxquery maxrows=50000000 shortnames=t connection="ChangeGear-db2" query="
-Select I.Summary, I.ItemID, Action, Hist.Comment, type.FullPath as Category, I.OID as OID, team.Description, I.CreatedDateTime
-FROM CG_IncidentRequest I
-JOIN CG_IncidentRequestHistoryRecord Hist ON I.OID = Hist.IncidentRequestHistoryRecords
-JOIN CG_IncidentRequestType type on type.OID = I.IncidentRequestType
-JOIN CG_Team team ON team.OID = I.OwningTeam
-WHERE (Action = 'Notes' OR Action = 'Description') AND team.Description = 'ISU Solution Center' AND I.CreatedDateTime >= Convert(datetime, '2017-08-21' ) AND I.CreatedDateTime <= Convert(datetime,'2017-12-5')
-"
-| table Summary, ItemID, Action, Comment, OID, Category
