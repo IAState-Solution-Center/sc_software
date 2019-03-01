@@ -1,35 +1,37 @@
 <?php
 session_start();
-$_SESSION['loginMessage'] = "";
+if(!isset($_SESSION['loginMessage'])) $_SESSION['loginMessage'] = "";
+if(!isset($_SESSION['user'])) $_SESSION['user'] = "";
 if(!isset($_SESSION['login'])) $_SESSION['login'] = "0";
+if(!isset($_SESSION['color1'])) $_SESSION['color1'] = "#63c8ff";
+if(!isset($_SESSION['color2'])) $_SESSION['color2'] = "#63c8ff";
 date_default_timezone_set('America/Chicago');
 
-// Copy paste for debug
-// 	echo "<pre>";
-// 	print_r($var);
-// 	echo "</pre>";
-
-if(isset($_POST['name']) && isset($_POST['ticket']) && isset($_POST['status']) && isset($_POST['assigned'])){
+if(isset($_POST['color1']) && isset($_POST['color2'])){
+	updateUserPreference($_SESSION['user'], $_POST['color1'], $_POST['color2']);
+}
+if(isset($_POST['name']) && isset($_POST['ticket']) && isset($_POST['status']) && isset($_POST['uniqueID']) && isset($_POST['assigned'])){
 	//Random number is ticket uniqueID placeholder
-	createAssignment(rand(111111, 599999), $_POST['name'], $_POST['ticket'], $_POST['status'], $_POST['assigned']);
+	createAssignment(substr($_POST['uniqueID'], 62, 6), $_POST['name'], $_POST['ticket'], $_POST['status'], $_POST['assigned']);
 	header('Location: /');
 }
 
 if(isset($_POST['ticketRemove'])){
 	removeAssignment($_POST['ticketRemove']);
+	header('Location: '.$_SERVER['REQUEST_URI']);
 }
 
 if(isset($_POST['ticketWorking'])){
 	workingAssignment($_POST['ticketWorking']);
-	header('Location: /');
+	header('Location: '.$_SERVER['REQUEST_URI']);
 }
 
 if(isset($_POST['csvData'])){
 	if(isset($_POST['option-one']))	$option = 1;
 	else $option = 0;
-	$csv = parse_csv(trim($_POST['csvData']));	
+	$csv = parse_csv(trim($_POST['csvData']));	//Trim removes the whitespace at the end of the copy/paste
 	$extraEmployees = array();
-	for($x = 1; $x <= 99; $x++){
+	for($x = 1; $x <= 99; $x++){	// Not modular but there are only 99 total sc accounts.
 		if(isset($_POST['appname-'.$x])) array_push($extraEmployees, $_POST['appname-'.$x]);
 	}
 	randomizeAssignments($csv, $option, $extraEmployees);
@@ -77,7 +79,7 @@ function workingAssignment($ticketNumber){
 // 	else echo "<p>db did not connect</p>";
 	try	{
 		 $result0=$db->query($sql);
-		 print "<p>query ran</p>";
+// 		 print "<p>query ran</p>";
 	}
 	catch(PDOException $e){
 		 echo "Statement failed: " . $e->getMessage() . "<br>";
@@ -117,10 +119,23 @@ function readTickets(){
 		 return false;
 	}
 	
+	$hex1 = $_SESSION['color1'];
+	list($r, $g, $b) = sscanf($hex1, "#%02x%02x%02x");
+	$hex1 = "rgba($r,$g,$b,0.3)";
+	
+	$hex2 = $_SESSION['color2'];
+	list($r, $g, $b) = sscanf($hex2, "#%02x%02x%02x");
+	$hex2 = "rgba($r,$g,$b,0.3)";
+	
 	foreach($result as $row)
     {
     	if($row['working']){
-    		$style = "class=pure-table-odd";
+//     		$style = "class=pure-table-odd";
+			if($row['employee'] == $_SESSION['user']){
+				$style = 'style=background:'.$hex1.';';
+			}else{
+				$style = 'style=background:'.$hex2.';';
+			}
     		$button = "pure-button-active";
     	}
     	else{
@@ -178,7 +193,7 @@ echo "<!doctype html>
 			<li class='pure-menu-item'><a href='/' class='pure-menu-link'><i class='fas fa-home'></i> Home</a></li>
 			<li class='pure-menu-item'><a href='assign.php' class='pure-menu-link'><i class='fas fa-clipboard-list'></i> Assignments</a></li>
 			<li class='pure-menu-item'>".$state."</a></li>
-		</ul>
+		</ul> - ".$_SESSION['user']."
 	</div><hr>";
 }
 
@@ -220,7 +235,9 @@ function getEmployees($option, $appointments){
 			if($name == "Megan Jensen") continue;
 			if($name == "Linda DeSchane") continue;
 			if(strpos($name, 'Tier 5') !== false && $option == 0) continue; //Note that the use of '!==' false is deliberate to see if string is contained
-																			//Option 0 is checkbox unchecked
+			if(strpos($name, 'Tier 0') !== false) continue; 				//Option 0 is checkbox unchecked
+			if(strpos($name, 'Tier 1') !== false) continue;					// T0 - T2 are removed from doing tickets as they should be doing unassigned.
+			if(strpos($name, 'Tier 2') !== false) continue;
 			foreach($appointments as $new){
 				array_push($empList, $new);
 			}
@@ -322,6 +339,27 @@ function sendAssignments($list){
 	}
 }
 
+function updateUserPreference($user, $color1, $color2){
+	$sql = "UPDATE preferences SET secondaryColor='".$color2."', primaryColor='".$color1."' WHERE user='".$user."';
+			INSERT OR IGNORE INTO preferences (user, primaryColor, secondaryColor) VALUES ('".$user."', '".$color1."', '".$color2."');";
+	$db = new PDO('sqlite:db/tks.db');
+	$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	try	{
+		 $result0=$db->query($sql);
+		 print "<p>query ran</p>";
+	}
+	catch(PDOException $e){
+		 echo "Statement failed: " . $e->getMessage() . "<br>";
+		 return false;
+	}
+	
+	$_SESSION['color1'] = $color1;
+	$_SESSION['color2'] = $color2;
+	
+	header('Location: /');
+}
+
+
 function authAPI($method, $data = false)
 {
 
@@ -362,12 +400,16 @@ function authAPI($method, $data = false)
     curl_close($curl);
 	
 	$returnCode = $info['http_code'];
+	$xml = new SimpleXMLElement($result);
 	
 	
 	// https://developer.cisco.com/docs/finesse/#!userget-user/userget-user
 	// Header response codes.
 	if($returnCode != '200') return false;
-	else return true;  
+	else {
+		$_SESSION['user'] = $xml->firstName." ".$xml->lastName;
+		return true;  
+	}
 }
 
 
