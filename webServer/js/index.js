@@ -5,13 +5,10 @@ function remove(ticketNumber){
 		method: 'POST',
 		success: function(msg) {
 // 			alert(msg);
-			console.log(msg);
-			// window.location = "/";
-			setInterval(refreshPage(), 100);
+			console.log("Removed: " + msg);
+			window.location = "/";
 		}
 	});
-// 	window.location = "/";
-	setInterval(refreshPage(), 1);
 }
 
 function working(ticketNumber){
@@ -21,12 +18,10 @@ function working(ticketNumber){
 		method: 'POST',
 		success: function(msg) {
 // 			alert(msg);
-			console.log(msg);
+			console.log("Working: " + msg);
 			window.location = "/";
 		}
 	});
-// 	window.location = "/";
-	// setInterval(refreshPage(), 1);
 }
 
 function updateTime(){

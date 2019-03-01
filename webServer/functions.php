@@ -172,7 +172,7 @@ if("index.php" == basename($_SERVER['PHP_SELF'])){
 echo "<!doctype html>
 <html>
   <head>
-    <title>ISU Solution Center</title>
+    <title>SC Tickets</title>
     <script language='JavaScript' type='text/javascript' src='js/index.js'></script>
     <script language='JavaScript' type='text/javascript' src='js/jquery.js'></script>
     <link rel='stylesheet' href='https://unpkg.com/purecss@1.0.0/build/pure-min.css' integrity='sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w' crossorigin='anonymous'>
