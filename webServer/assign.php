@@ -101,8 +101,14 @@ if($_SESSION['login'] == "0") header("Location: /login");
 						<div class="pure-u-1 pure-u-md-1-3">
 							<textarea name='csvData' style="line-height: 50px;" class="pure-input-1-2" placeholder="CSV String From Splunk"></textarea>
 						</div>
+						
+						<div class="pure-u-1 pure-u-md-1-3">
+							<p>Add People on Appointments - Works now!</p>
+							<textarea name='extraEmp' style="line-height: 50px;" class="pure-input-1-2" placeholder="Enter employees seperated by comma."></textarea>
+							<span name='extraEmp'>E.g. "Name 1, Name 2, Name 3"</span>
+						</div>
 					</div>
-					<p>Select People on Appointments - Works, but Experimental.</p>
+					<!-- <p>Select People on Appointments - Doesn't work..</p>
 					<style scoped>
 					.text-area {
 						padding: .5em .6em;
@@ -118,8 +124,8 @@ if($_SESSION['login'] == "0") header("Location: /login");
 					}					
 					</style>
 					<div class="text-area" style="height:200px">
-						<?= getOfflineEmployees() ?>
-					</div>
+						 // getOfflineEmployees() ?>
+					</div> -->
 
 					<label for="option" class="pure-checkbox">
 						<input id="option" name="option-one" type="checkbox"> Select Tier 5s

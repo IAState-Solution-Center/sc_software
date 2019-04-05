@@ -5,6 +5,11 @@ if(!isset($_SESSION['user'])) $_SESSION['user'] = "";
 if(!isset($_SESSION['login'])) $_SESSION['login'] = "0";
 if(!isset($_SESSION['color1'])) $_SESSION['color1'] = "#63c8ff";
 if(!isset($_SESSION['color2'])) $_SESSION['color2'] = "#63c8ff";
+// if(isset($_SESSION['loginID'])){
+// 	$_SESSION['color1'] = "#63c8ff";
+// 	$_SESSION['color2'] = "#63c8ff";
+// 	loadSavedPreference($_SESSION['loginID']);
+// }
 date_default_timezone_set('America/Chicago');
 
 if(isset($_POST['color1']) && isset($_POST['color2'])){
@@ -31,9 +36,10 @@ if(isset($_POST['csvData'])){
 	else $option = 0;
 	$csv = parse_csv(trim($_POST['csvData']));	//Trim removes the whitespace at the end of the copy/paste
 	$extraEmployees = array();
-	for($x = 1; $x <= 99; $x++){	// Not modular but there are only 99 total sc accounts.
-		if(isset($_POST['appname-'.$x])) array_push($extraEmployees, $_POST['appname-'.$x]);
+	if(isset($_POST['extraEmp'])){
+		$extraEmployees = explode(", ", trim($_POST['extraEmp']));
 	}
+	// $extraEmployees = array();
 	randomizeAssignments($csv, $option, $extraEmployees);
 }
 
@@ -126,7 +132,6 @@ function readTickets(){
 	$hex2 = $_SESSION['color2'];
 	list($r, $g, $b) = sscanf($hex2, "#%02x%02x%02x");
 	$hex2 = "rgba($r,$g,$b,0.3)";
-	
 	foreach($result as $row)
     {
     	if($row['working']){
@@ -238,12 +243,13 @@ function getEmployees($option, $appointments){
 			if(strpos($name, 'Tier 0') !== false) continue; 				//Option 0 is checkbox unchecked
 			if(strpos($name, 'Tier 1') !== false) continue;					// T0 - T2 are removed from doing tickets as they should be doing unassigned.
 			if(strpos($name, 'Tier 2') !== false) continue;
-			foreach($appointments as $new){
-				array_push($empList, $new);
-			}
+			// foreach($appointments as $new){
+			// 	array_push($empList, $new);
+			// }
 			array_push($empList, $name);
 		}
 	}
+	$empList = array_merge($empList, $appointments);
 	return $empList;
 }
 
@@ -262,7 +268,8 @@ function getOfflineEmployees(){
 			if($single->firstName." ".$single->lastName == "Brent Black") continue;
 			if($single->firstName." ".$single->lastName == "Megan Jensen") continue;
 			if($single->firstName." ".$single->lastName == "Linda DeSchane") continue;
-			if($single->firstName." ".$single->lastName == "Meghna Vaidya") continue; // Not a CSA but her phone was really messed up during onboarding.
+			if($single->firstName." ".$single->lastName == "Meghna Vaidya") continue; 
+			// Not a CSA but her phone was really messed up during onboarding.
 			if(strcasecmp(substr($name, 0, 2), "sc") == 0) continue; //This is some crap to remove phone logins that were made incorrectly
 			if(!strcasecmp(substr($single->firstName, 0, 2), "sc")) continue; //Same as above
 			$checkbox = "<label for='option-one' class='pure-checkbox'><input id='option-one' type='checkbox' value='".$name."' name='appname-".$itr."'> ".$name."</label>";
@@ -339,24 +346,63 @@ function sendAssignments($list){
 	}
 }
 
+function loadSavedPreference($user){
+	$sql = "SELECT * from preferences where user = '$user'";
+	$db = new PDO('sqlite:db/tks.db');
+	$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	try	{
+		$result=$db->query($sql);
+	}
+	catch(PDOException $e){
+		echo "Statement failed: " . $e->getMessage() . "<br>";
+		return false;
+	}
+	if($result->rowCount() == 0){
+		$primaryColor = '#63c8ff';
+		$secondaryColor = '#63c8ff';
+		createUserPreference($user, $primaryColor, $secondaryColor);
+		return array('color1'=>$primaryColor, 'color2'=>$secondaryColor);
+	} else {
+		foreach($result as $row){
+			$primaryColor = $row['primaryColor'];
+			$secondaryColor = $row['secondaryColor'];
+		}
+		updateUserPreference($user, $primaryColor, $secondaryColor);
+		return array('color1'=>$primaryColor, 'color2'=>$secondaryColor);
+	}
+}
+
 function updateUserPreference($user, $color1, $color2){
-	$sql = "UPDATE preferences SET secondaryColor='".$color2."', primaryColor='".$color1."' WHERE user='".$user."';
-			INSERT OR IGNORE INTO preferences (user, primaryColor, secondaryColor) VALUES ('".$user."', '".$color1."', '".$color2."');";
+	$sql = "update preferences set primaryColor = '$color1', secondaryColor = '$color2' where user = '$user';";
 	$db = new PDO('sqlite:db/tks.db');
 	$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	try	{
 		 $result0=$db->query($sql);
-		 print "<p>query ran</p>";
+		//  print "<p>query ran</p>";
 	}
 	catch(PDOException $e){
-		 echo "Statement failed: " . $e->getMessage() . "<br>";
-		 return false;
+		echo "Statement failed: " . $e->getMessage() . "<br>";
+		return false;
 	}
 	
 	$_SESSION['color1'] = $color1;
 	$_SESSION['color2'] = $color2;
-	
-	header('Location: /');
+	if($_SERVER['REQUEST_URI'] != '/api') header('Location: /');
+}
+
+function createUserPreference($user, $color1, $color2){
+	$sql = "INSERT into preferences (user, primaryColor, secondaryColor) VALUES ('".$user."', '".$color1."', '".$color2."');";
+	$db = new PDO('sqlite:db/tks.db');
+	$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	try	{
+		 $result0=$db->query($sql);
+	}
+	catch(PDOException $e){
+		// echo $e->errorInfo[1];
+		// if ($e->errorInfo[1] == 19) updateUserPreference($user, $color1, $color2); //Error 19 is insert failed due to unique constraint.
+		echo "Statement failed: " . $e->getMessage() . "<br>";
+		return false;
+	}
 }
 
 
@@ -408,6 +454,7 @@ function authAPI($method, $data = false)
 	if($returnCode != '200') return false;
 	else {
 		$_SESSION['user'] = $xml->firstName." ".$xml->lastName;
+		$_SESSION['loginID'] = strval($xml->loginName); //Added space to convert to string.
 		return true;  
 	}
 }
