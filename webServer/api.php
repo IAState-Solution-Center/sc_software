@@ -1,7 +1,7 @@
 <?php
 $method = "GET";
 $data = false;
-$url = "https://uc-ccx-pub.tele.iastate.edu:8445/finesse/api/User/sc48t5";
+$url = "https://uc-ccx-pub.tele.iastate.edu:8445/finesse/api/Users/";
 $curl = curl_init();
 
 switch ($method)
@@ -32,27 +32,7 @@ curl_close($curl);
 
 $xml = new SimpleXMLElement($result);
 echo "<pre>";
-// print_r($xml);
-
-// echo $xml->firstName." ".$xml->lastName."<br>";
-// echo $xml->loginName;
-
-include('functions.php');
-echo "<br>";
-$hex = "#adc1ff";
-// list($r, $g, $b) = sscanf($hex, "#%02x%02x%02x");
-// echo "$hex -> rgba($r,$g,$b,0.3)";
-echo "<br>";
-// print_r(loadSavedPreference("sc48t5"));
-// echo $_SESSION['loginID'];
-// echo $_SESSION['user'];
-
-// $user = $_SESSION['loginID'];
-print_r($_SESSION);
-// list($r, $g, $b) = sscanf($hex, "#%02x%02x%02x");
-// $hex = "rgba($r,$g,$b,0.3)";
-// echo $hex;
-print_r(loadSavedPreference($_SESSION['loginID']));
+print_r($xml);
 
 echo "<pre>";
 ?>

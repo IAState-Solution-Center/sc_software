@@ -1,4 +1,5 @@
 <?php
+include('ChromePHP.php');
 session_start();
 if(!isset($_SESSION['loginMessage'])) $_SESSION['loginMessage'] = "";
 if(!isset($_SESSION['user'])) $_SESSION['user'] = "";
@@ -39,7 +40,6 @@ if(isset($_POST['csvData'])){
 	if(isset($_POST['extraEmp'])){
 		$extraEmployees = explode(", ", trim($_POST['extraEmp']));
 	}
-	// $extraEmployees = array();
 	randomizeAssignments($csv, $option, $extraEmployees);
 }
 
@@ -198,7 +198,7 @@ echo "<!doctype html>
 			<li class='pure-menu-item'><a href='/' class='pure-menu-link'><i class='fas fa-home'></i> Home</a></li>
 			<li class='pure-menu-item'><a href='assign.php' class='pure-menu-link'><i class='fas fa-clipboard-list'></i> Assignments</a></li>
 			<li class='pure-menu-item'>".$state."</a></li>
-		</ul> - ".$_SESSION['user']."
+		</ul> &nbsp;&nbsp;&nbsp;&nbsp; ".$_SESSION['user']."
 	</div><hr>";
 }
 
@@ -249,12 +249,17 @@ function getEmployees($option, $appointments){
 			array_push($empList, $name);
 		}
 	}
-	$empList = array_merge($empList, $appointments);
-	return $empList;
+
+	if(count($appointments) <= 1){
+		return $empList;
+	} else {
+		return array_merge($empList, $appointments);
+	}
 }
 
 // Doesnt check against already signed in accounts so if youre signed into t5 your t0 will show logged out and get added.
 // Not that bad, but could be fixed in V2.
+// Isnt used anymore. Should be removed.
 function getOfflineEmployees(){ 
 	$users = CallAPI("GET");
 	$xml = simplexml_load_string($users);
@@ -318,7 +323,7 @@ function CallAPI($method, $data = false)
 }
 
 function randomizeAssignments($tickets, $option, $extraEmployees){
-	$employees = getEmployees($option, $extraEmployees); //TODO - Fix Appointments argument.
+	$employees = getEmployees($option, $extraEmployees);
 	$itr = 0;
 	unset($tickets[0]); //Removes column headers from csv.
 	
@@ -330,6 +335,9 @@ function randomizeAssignments($tickets, $option, $extraEmployees){
 		array_push($assignments, $set);
 		$itr++;
 	}
+
+	// ChromePhp::log(($assignments));
+	// ChromePhp::log('Assignments');
 	sendAssignments($assignments);
 }
 
